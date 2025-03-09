@@ -5,8 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+<<<<<<< HEAD
     "export": "next build",
     "start": "next start"
+=======
+    "export": "next export",
+    "start": "next start" 
+>>>>>>> e67d334a8e67cd665f400556df908c83f8eefa6a
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
