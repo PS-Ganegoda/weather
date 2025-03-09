@@ -1,101 +1,95 @@
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Header from "./components/header";
+import WeatherCard from "./components/weathercard";
+import AddLocationCard from "./components/Addcard";
+import Background3 from "@/public/images/bg2.png";
+
+// Define a TypeScript interface for the weather data
+interface WeatherData {
+  name: string;
+  sys: { country: string };
+  dt: number;
+  main: { temp: number; feels_like: number; humidity: number };
+  weather: { description: string }[];
+  visibility: number;
+  wind: { speed: number };
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const APIKey = process.env.NEXT_PUBLIC_API_KEY;
+  const [details, setDetails] = useState<WeatherData | null>(null); // Use specific type instead of any
+  const [location, setLocation] = useState("Colombo");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Memoize getweather with useCallback to avoid re-creation on every render
+  const getweather = useCallback(async () => {
+    if (!APIKey) {
+      console.error("API key not found");
+      return;
+    }
+    try {
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${APIKey}&units=metric`;
+      const response = await fetch(url);
+      console.log(response);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: WeatherData = await response.json(); // Type assertion
+      console.log("data", data);
+      setDetails(data);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("An unknown error occurred");
+      }
+    }
+  }, [location, APIKey]); // Dependencies for useCallback
+
+  const handleAddLocation = (newCity: string) => {
+    setLocation(newCity);
+    // No need to call getweather here since useEffect will handle it
+  };
+
+  useEffect(() => {
+    getweather();
+  }, [getweather]); // Add getweather as a dependency
+
+  return (
+    <div className="relative h-screen w-screen">
+      <Image
+        src={Background3}
+        alt="Background"
+        fill
+        className="object-cover"
+        quality={80}
+      />
+      <div className="flex flex-col">
+        <div className="relative z-10">
+          <Header />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="flex justify-center align-middle gap-5">
+          <WeatherCard
+            location={`${details?.name || location}, ${details?.sys?.country || "LK"}`}
+            date={new Date((details?.dt || Date.now()) * 1000).toLocaleDateString("en-US", {
+              weekday: "long",
+              day: "numeric",
+              month: "numeric",
+              year: "numeric",
+            })}
+            temperature={details?.main?.temp ? `${Math.round(details.main.temp)}°C` : "15°C"}
+            condition={details?.weather?.[0]?.description || "Mostly cloudy"}
+            visibility={details?.visibility ? `${details.visibility / 1000} km` : "10 km"}
+            feelsLike={details?.main?.feels_like ? `${Math.round(details.main.feels_like)}°C` : "10°C"}
+            humidity={details?.main?.humidity ? `${details.main.humidity}%` : "10%"}
+            wind={details?.wind?.speed ? `${details.wind.speed} km/h` : "10 km/h"}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          <AddLocationCard onAddLocation={handleAddLocation} />
+        </div>
+      </div>
     </div>
   );
 }
