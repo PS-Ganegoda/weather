@@ -1,0 +1,36 @@
+# Ignore version control files and directories
+.git
+.gitignore
+
+# Ignore Docker-specific files (except Dockerfile)
+.dockerignore
+
+# Ignore environment files with sensitive data
+.env
+*.env
+
+# Ignore log files
+*.log
+npm-debug.log
+
+# Ignore temporary files and caches
+*.tmp
+*.bak
+*.swp
+node_modules/
+dist/
+build/
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore documentation and test files (if not needed in the image)
+docs/
+test/
+tests/
+*.md
+
+# Ignore local development tools/configs
+.vscode/
+.idea/
